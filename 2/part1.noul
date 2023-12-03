@@ -1,0 +1,17 @@
+import "prelude.noul";
+
+maximums := { "red": 12, "green": 13, "blue": 14 };
+
+parse_game := \s -> (
+  game, roundstr := s split ": ";
+  gid := ints(game).first;
+  for (round <- roundstr split "; ") (
+    for (nscol <- round split ", ") (
+      n, col := nscol split " ";
+      if (int(n) > maximums[col]) return 0;
+    )
+  );
+  return gid;
+);
+
+sum! (read() . lines) filter len map parse_game

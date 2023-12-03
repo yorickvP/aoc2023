@@ -1,0 +1,13 @@
+natnum_re := R"zero|one|two|three|four|five|six|seven|eight|nine|\d";
+num_re := R"\d";
+
+digit_strs := ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+
+natoi := \s -> try digit_strs locate s catch x -> int s;
+
+doLine := \s -> (
+  nums := s search_all natnum_re map natoi;
+  first(nums) * 10 + last(nums)
+);
+
+sum! read() split "\n" filter len map doLine

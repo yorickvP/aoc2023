@@ -1,0 +1,6 @@
+doLine := \s -> (
+  nums := s search_all R"\d" map int;
+  first(nums) * 10 + last(nums)
+);
+
+sum(read() split "\n" filter len map doLine)

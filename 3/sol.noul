@@ -1,0 +1,45 @@
+import "prelude.noul";
+
+puzzle_input := read() . lines filter len;
+isDigit := \s -> s in "0123456789";
+
+
+height := len(puzzle_input);
+width := len(puzzle_input[0]);
+isInBounds := \[i, j] -> i >= 0 and j >= 0 and i < height and j < width;
+
+neighbours := \pos -> (
+  r := -(1) to 1;
+  r ** r
+    map vector
+    map (+ pos)
+    reject (== pos)
+    filter isInBounds
+);
+
+isNeighbouring := \[a,b],[c,d] -> (a == c) and (abs(b - d) <= 1);
+
+digitAtPos := \[i, j] -> isDigit ! puzzle_input[i][j];
+
+numberAtPos := \v -> (
+  [i, j] := v iterate (+V(0, -1)) take (isInBounds _ and digitAtPos _) then last;
+  puzzle_input[i][j:].ints.first
+);
+
+res1 := 0;
+res2 := 0;
+for (i, row <<- puzzle_input; j, col <<- row) (
+  if (col not_in "01234567890.") (
+    neigh_nums :=
+      V(i, j).neighbours
+        filter digitAtPos
+        group isNeighbouring
+        map first
+        map numberAtPos;
+    res1 += sum neigh_nums;
+    if (col == "*" and len(neigh_nums) > 1) (
+      res2 += product neigh_nums;
+    );
+  );
+);
+[res1, res2]
