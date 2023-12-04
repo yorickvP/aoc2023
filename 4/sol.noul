@@ -1,0 +1,18 @@
+import "prelude.noul";
+
+puzzle_input := read() . lines filter len;
+
+num_matches := \line -> (
+  [first, second] := line split "|" map ints;
+  remove first[0];
+  len! set(first) && set(second)
+);
+
+[res1, res2] := [0, 1 .* puzzle_input.len];
+
+for (i, l <<- puzzle_input map num_matches) (
+  res1 += if (l > 0) (2 ^ (l - 1)) else 0;
+  every res2[i + 1:i + l + 1] += res2[i];
+);
+
+[res1, sum! res2]
