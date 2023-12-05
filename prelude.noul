@@ -1,1 +1,13 @@
 ints := \s -> s search_all R"\d+" map int;
+
+rangeOverlap := \[a,al], [b, bl] -> (
+  [from, to] := [max(a, b), min(a+al, b+bl)];
+  if (from < to) [[from, to - from]]
+  else []
+);
+
+rangePlus := \r, n -> r map (\[a, b] -> [a + n, b]);
+
+chunkN := \l, n ->
+  for (i <- 0 til len(l) by n)
+    yield l[i:i + n];

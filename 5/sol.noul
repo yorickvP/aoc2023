@@ -1,0 +1,26 @@
+import "prelude.noul";
+
+puzzle_input := read() . lines;
+
+runMap := \starts, maps -> (
+  && := rangeOverlap;
+  result := [];
+  for (range <- starts) (
+    lastAdded := 0;
+    for ([dst, src, l] <- maps) (
+      result ++= range && [lastAdded, src - lastAdded];
+      result ++= range && [src, l] rangePlus dst - src;
+      lastAdded = src + l;
+    );
+    result ++= range && [lastAdded, (1/0)];
+  );
+  result
+);
+
+[seeds, maps] := puzzle_input group (\x,y -> y.len) map (\x -> x filter len) filter len then uncons;
+seeds = ints! first seeds;
+maps = maps map (_.tail map ints sort (<=> on second));
+
+runSeeds := \ranges -> maps fold runMap from ranges map first then min;
+
+[runSeeds(seeds map [_, 1]), runSeeds(seeds chunkN 2)]
