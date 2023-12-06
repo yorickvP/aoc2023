@@ -1,0 +1,15 @@
+import "prelude.noul";
+
+puzzle_input := read() . lines filter len;
+
+traveled := \btn, tot -> ((tot - btn) * btn);
+
+countWays := \tot, dist -> (0 to tot count (\x -> traveled(x, tot) > dist));
+
+race := \[totals, distances] -> totals zip distances with countWays then product;
+
+[
+  puzzle_input map ints,
+  puzzle_input map (filter is_digit) map ints
+] map race
+
