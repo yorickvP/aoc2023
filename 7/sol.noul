@@ -1,0 +1,42 @@
+import "prelude.noul";
+
+puzzle_input := read() . lines filter len map (split " ");
+
+strengths := "AKQJT98765432";
+hands := "54F321H";
+doJokers := false;
+
+handType := \hand -> (
+  jokers := 0;
+  if (doJokers) (
+    jokers = hand count "J";
+    hand reject= (== "J");
+  );
+  h := (sort hand) group (==) map len sort >=<;
+  if (h == []) h = [0];
+  switch ([h[0] + jokers, h])
+  case [5, _] -> "5"
+  case [4, _] -> "4"
+  case [3, [_, 2]] -> "F"
+  case [3, _] -> "3"
+  case [2, [2, 2, 1]] -> "2"
+  case [2, _] -> "1"
+  case [1, _] -> "H"
+);
+
+toStrength := \[hand, _] -> (
+  [hands locate hand.handType, hand map (strengths locate)]
+);
+
+res1 := 0;
+for (i, [_, bid] <<- puzzle_input sort (>=< on toStrength)) (
+  res1 += (i + 1) * (int bid)
+);
+
+strengths = "AKQT98765432J";
+doJokers = true;
+res2 := 0;
+for (i, [_, bid] <<- puzzle_input sort (>=< on toStrength)) (
+  res2 += (i + 1) * (int bid)
+);
+[res1, res2]
