@@ -1,0 +1,23 @@
+import "prelude.noul";
+
+[instructions, maps] := read() . lines . uncons;
+maps filter= len;
+
+mapping := for ([k, v] <- maps map (split " = "))
+  yield k: v[1:-1] split ", ";
+
+walk := \pos, instr -> (
+  switch(instr)
+  case "L" -> mapping[pos][0]
+  case "R" -> mapping[pos][1]
+);
+
+
+pos := "AAA";
+steps := 0;
+for (instr <- cycle instructions) (
+  steps += 1;
+  pos = walk(pos, instr);
+  if (pos == "ZZZ") break;
+);
+print(steps)
