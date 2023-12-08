@@ -18,7 +18,7 @@ cycle_count := \position -> (
   while (true) (
     seen_before[position] = steps;
     position = instructions fold walk from position;
-    steps += len instructions;
+    steps += 1;
     if (position in seen_before) return steps - seen_before[position];
   );
   steps
@@ -26,6 +26,4 @@ cycle_count := \position -> (
 
 positions := mapping.keys filter (ends_with "A") map cycle_count;
 
-lcm := \x -> product(x) / ((x fold gcd) ^ len(x));
-
-print(lcm(positions) * (positions fold gcd));
+print(product(positions) * len(instructions));
