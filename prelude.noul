@@ -1,4 +1,4 @@
-ints := \s -> s search_all R"\d+" map int;
+ints := \s -> s search_all R"-?\d+" map int;
 
 rangeOverlap := \[a,al], [b, bl] -> (
   [from, to] := [max(a, b), min(a+al, b+bl)];

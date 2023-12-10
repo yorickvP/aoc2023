@@ -1,0 +1,20 @@
+import "prelude.noul";
+
+puzzle_input := read() . lines filter len map (vector on ints);
+
+differences := \line -> line[1:] - line[:-1];
+
+next_val := \line -> (
+  if (line all (== 0)) return 0;
+  line[-1] + line.differences.next_val
+);
+
+prev_val := \line -> (
+  if (line all (== 0)) return 0;
+  line[0] - line.differences.prev_val
+);
+
+[
+  puzzle_input map next_val,
+  puzzle_input map prev_val
+] map sum
