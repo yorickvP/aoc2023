@@ -1,0 +1,82 @@
+import "prelude.noul";
+puzzle_input := read() . lines filter len;
+
+height := len(puzzle_input);
+width := len(puzzle_input[0]);
+isInBounds := \[i, j] -> i >= 0 and j >= 0 and i < height and j < width;
+
+S := null;
+
+connections := \symbol -> (switch (symbol)
+  case "|" -> [V(1, 0), V(-1, 0)]
+  case "-" -> [V(0, 1), V(0, -1)]
+  case "L" -> [V(-1, 0), V(0, 1)]
+  case "J" -> [V(-1, 0), V(0, -1)]
+  case "7" -> [V(1, 0), V(0, -1)]
+  case "F" -> [V(1, 0), V(0, 1)]
+  case "." -> []
+  case "S" -> connections S
+);
+
+ix := \a, x -> a[x[0]][x[1]];
+
+cell_neighbours := \pos -> (
+  connections(puzzle_input ix pos) map (+ pos) filter isInBounds
+);
+
+is_cycle := \start_pos -> (
+  prev_pos, cur_pos, loop := null, start_pos, {};
+  while(1) (
+    loop[cur_pos] = null;
+    cn := cur_pos.cell_neighbours filter (cur_pos in _.cell_neighbours) reject (== prev_pos);
+    if (cn == []) return false;
+    prev_pos, cur_pos = cur_pos, first cn;
+    if (cur_pos == start_pos) break;
+  );
+  loop
+);
+
+is_vertical_crossing := \cell -> (
+  cell in "|LJ" or (cell == "S" and is_vertical_crossing(S))
+);
+
+find_s := \ -> (
+  for (i <- 0 til height; j <- 0 til width) (
+    if (puzzle_input[i][j] == "S")
+      return V(i, j);
+  );
+  throw "huh";
+);
+
+Spos := find_s();
+
+loop := null;
+for (piece <- "|-LJ7F") (
+  S = piece;
+  loop = is_cycle(Spos);
+  if (loop) (
+    print("found cycle!", len(loop) / 2, piece);
+    break;
+  )
+);
+
+interior := 0;
+for (i <- 0 til height) (
+  crossing_count := 0;
+  for (j <- 0 til width) (
+    cell := puzzle_input ix V(i, j);
+    if (V(i, j) in loop) (
+      write(cell.bold);
+      crossing_count += cell.is_vertical_crossing;
+    ) else (
+      if (odd(crossing_count)) (
+        interior += 1;
+        write(cell.bold);
+      ) else (
+        write(cell);
+      );
+    );
+  );
+  write("\n");
+);
+print(interior);

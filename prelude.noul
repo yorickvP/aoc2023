@@ -1,5 +1,5 @@
 ints := \s -> s search_all R"-?\d+" map int;
-
+bold        := \text -> F"\x1b[1m{text}\x1b[0m";
 rangeOverlap := \[a,al], [b, bl] -> (
   [from, to] := [max(a, b), min(a+al, b+bl)];
   if (from < to) [[from, to - from]]
