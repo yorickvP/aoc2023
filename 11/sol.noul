@@ -1,0 +1,29 @@
+import "prelude.noul";
+puzzle_input := read() . lines filter len;
+
+height := len(puzzle_input);
+width := len(puzzle_input[0]);
+
+galaxies := for (i <- 0 til height; j <- 0 til width; if puzzle_input[i][j] == "#") yield V(i, j);
+
+emptyRows := set(0 til height) -- set(galaxies map first);
+emptyCols := set(0 til width) -- set(galaxies map second);
+
+expandedGalaxies := \expansion -> (
+  galaxies' := [];
+  i' := 0;
+  for (i <- 0 til height) (
+    j' := 0;
+    for (j <- 0 til width) (
+      if (puzzle_input[i][j] == "#") galaxies' +.= V(i', j');
+      j' += if (j in emptyCols) expansion else 1;
+    );
+    i' += if (i in emptyRows) expansion else 1;
+  );
+  galaxies'
+);
+
+dist := \[a, b] -> sum! abs! a - b;
+
+print(expandedGalaxies(2) combinations 2 map dist then sum);
+print(expandedGalaxies(1e6) combinations 2 map dist then sum);
