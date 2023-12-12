@@ -1,0 +1,39 @@
+import "prelude.noul";
+puzzle_input := read() . lines filter len map (split " ");
+
+firstGroupLen := len on (search R'#+');
+
+countMatches := \str, groups -> (
+  # print("testing", str, groups);
+  if (groups == []) (
+    if (str search R'#+') return 0;
+    # always possible, with every ? filled with .
+    return 1;
+  );
+  fg := str search R'#+\??|\?+';
+  if (fg and fg[0] == "#" and fg[-1] == '#') (
+    fgl := firstGroupLen str;
+    if (fgl > groups[0]) return 0;
+    if (fgl == groups[0]) (
+      fgs := str locate "#";
+      return countMatches(str[fgs + fgl:], groups[1:]);
+    );
+  );
+  firstQ := str locate? "?";
+  if (firstQ == null) return 0;
+  str[firstQ] = ".";
+  res := countMatches(str, groups);
+  # print("tested", str, res, groups);
+  str[firstQ] = "#";
+  res2 := countMatches(str, groups);
+  # print("tested", str, res2, groups);
+  res + res2
+);
+
+s := 0;
+for ([str, grp] <- puzzle_input) (
+  m := countMatches(str, grp.ints);
+  print(str, grp.ints, m);
+  s += m;
+);
+print("SUM:", s);
