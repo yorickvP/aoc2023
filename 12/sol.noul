@@ -1,38 +1,48 @@
 import "prelude.noul";
 puzzle_input := read() . lines filter len map (split " ");
 
-firstGroupLen := len on (search R'#+');
-
-countMatches := \str, groups -> (
+countMatches := memoize \str, groups -> (
   # print("testing", str, groups);
   if (groups == []) (
-    if (str search R'#+') return 0;
+    if (str search R'#') return 0;
     # always possible, with every ? filled with .
     return 1;
   );
+  if ((str count (in "#?")) < groups.sum) return 0;
   fg := str search R'#+\??|\?+';
-  if (fg and fg[0] == "#" and fg[-1] == '#') (
-    fgl := firstGroupLen str;
-    if (fgl > groups[0]) return 0;
-    if (fgl == groups[0]) (
+  if (fg and fg[0] == "#") (
+    fgl := fg.len;
+    if (fg[-1] == '#') (
+      if (fgl != groups[0]) return 0;
+      # group complete
       fgs := str locate "#";
       return countMatches(str[fgs + fgl:], groups[1:]);
+    );
+    if (fg[-1] == '?') (
+      # ###?, so we know the ?
+      fgl -= 1;
+      if (fgl > groups[0]) return 0;
+      qloc := str locate "?";
+      if (fgl == groups[0])
+        # it's .
+        return countMatches(str[qloc+1:], groups[1:]);
+      if (fgl < groups[0]) (
+        str[qloc] = "#";
+        return countMatches(str, groups);
+      );
     );
   );
   firstQ := str locate? "?";
   if (firstQ == null) return 0;
   str[firstQ] = ".";
   res := countMatches(str, groups);
-  # print("tested", str, res, groups);
   str[firstQ] = "#";
-  res2 := countMatches(str, groups);
-  # print("tested", str, res2, groups);
-  res + res2
+  res + countMatches(str, groups)
 );
 
 s := 0;
 for ([str, grp] <- puzzle_input) (
-  m := countMatches(str, grp.ints);
+  m := countMatches(((str $ "?") $* 5)[:-1], grp.ints ** 5);
   print(str, grp.ints, m);
   s += m;
 );
