@@ -1,0 +1,41 @@
+import "prelude.noul";
+puzzle_input := read() split "\n\n" map lines filter len;
+
+
+doPattern := \pattern, skip -> (
+  height := len(pattern);
+  width := len(pattern[0]);
+  for (i <- 1 til width) (
+    if (skip == i) continue;
+    plen := min(i, width - i);
+    part_a := pattern map (\x -> x[i - plen:i].reverse);
+    part_b := pattern map (_[i:plen + i]);
+    if (part_a == part_b) return i;
+  );
+  horizontals := [];
+  for (i <- 1 til height) (
+    if (skip == i * 100) continue;
+    plen := min(i, height - i);
+    part_a := pattern[i - plen:i].reverse;
+    part_b := pattern[i:plen + i];
+    if (part_a == part_b) return i * 100;
+  );
+  return 0;
+);
+
+toggle := \x -> if (x == "#") "." else "#"; 
+
+doAllPattern := \pattern -> (
+  height := len(pattern);
+  width := len(pattern[0]);
+  original := doPattern(pattern, null);
+  for (i <- 0 til height; j <- 0 til width) (
+    origBit := pattern[i][j];
+    pattern[i][j] = origBit.toggle;
+    new := doPattern(pattern, original);
+    if (new > 0 and new != original) return new;
+    pattern[i][j] = origBit;
+  );
+);
+print(puzzle_input map (_ doPattern null) then sum);
+print(puzzle_input map doAllPattern then sum);
