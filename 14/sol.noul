@@ -1,0 +1,52 @@
+import "prelude.noul";
+puzzle_input := read() . lines filter len map (join "");
+
+rollLeft := \l -> (
+  ll := l.len;
+  c, s := 0, 0;
+  r := "";
+  for (i <- 0 til ll) (
+    if (l[i] == "O") c += 1;
+    if (l[i] == "#") (
+      r $= ("O" $* c) $ ("." $* (i - s - c)) $ "#";
+      c, s = 0, i + 1;
+    );
+  );
+  r $= ("O" $* c) $ ("." $* (ll - s - c));
+  r
+);
+
+rollLefts := _ map rollLeft;
+
+roll := \l, dir -> (
+  switch (dir)
+  case "N" -> l.transpose.rollLefts.transpose
+  case "W" -> l.rollLefts
+  case "S" -> l.transpose map reverse then rollLefts map reverse then transpose
+  case "E" -> l map reverse then rollLefts map reverse
+);
+
+runCycle := (_ roll "N" roll "W" roll "S" roll "E");
+
+runCycles := \l -> (
+  seenBefore := {};
+  steps := 0;
+  for (i <- l iterate runCycle) (
+    if (i in seenBefore and (1000000000 - steps) % (steps - seenBefore[i]) == 0)
+      return i;
+    seenBefore[i] = steps;
+    steps += 1;
+  );
+);
+
+countBefore := \l -> (
+  res := 0;
+  for (col <- l.transpose) (
+    ll := col.len;
+    for (i, c <<- col; if c == "O") res += ll - i;
+  );
+  res
+);
+
+print("Part 1", puzzle_input roll "N" then countBefore);
+print("Part 2", puzzle_input.runCycles.countBefore);
