@@ -1,0 +1,30 @@
+import "prelude.noul";
+puzzle_input := read() filter (!= "\n") split ",";
+
+hash := (_ fold (\cv, x -> (cv + x.ord) * 17 % 256) from 0);
+
+print("part 1", puzzle_input map hash then sum);
+
+boxes := [] .* 256;
+for (instr <- puzzle_input) (
+  label := instr search R'[^=-]+';
+  box := hash label;
+  op := instr search R'[=-]';
+  if (op == "-") (
+    boxes[box] reject= (== label) on first;
+  );
+  if (op == "=") (
+    strength := instr split "=" then second then int;
+    try (
+      ix := boxes[box] locate ((== label) on first);
+      boxes[box][ix] = [label, strength];
+    ) catch x -> (boxes[box] +.= [label, strength]);
+  );
+);
+
+s := 0;
+for (bi, box <<- boxes; i, [label, strength] <<- box) (
+  s += (bi + 1) * (i + 1) * strength;
+);
+
+print("Part 2:", s)
