@@ -1,0 +1,70 @@
+import "prelude.noul";
+
+puzzle_input := read() . lines filter len;
+
+height := len(puzzle_input);
+width := len(puzzle_input[0]);
+isInBounds := \[i, j] -> i >= 0 and j >= 0 and i < height and j < width;
+
+ix := \a, x -> a[x[0]][x[1]];
+
+d := "NEWS" locate;
+
+delta := \dir -> (
+  [V(-1, 0), V(0, 1), V(0, -1), V(1, 0)][d dir]
+);
+
+travel := null;
+tq := [];
+
+travelStraight := \dir, pos -> (
+  if (isInBounds(pos + dir.delta))
+    tq append= [dir, pos + delta(dir)];
+);
+
+travel = \dir, pos -> (
+  switch ([dir, puzzle_input ix pos])
+  case [_, "."] -> travelStraight(dir, pos)
+  case [_, "/"] -> travelStraight("ENSW"[dir.d], pos)
+  case [_, "\\"] -> travelStraight("WSNE"[dir.d], pos)
+  case ["W" or "E", "-"] -> travelStraight(dir, pos)
+  case ["N" or "S", "-"] -> (
+    travelStraight("W", pos);
+    travelStraight("E", pos);
+  )
+  case ["N" or "S", "|"] -> travelStraight(dir, pos)
+  case ["W" or "E", "|"] -> (
+    travelStraight("N", pos);
+    travelStraight("S", pos);
+  );
+);
+
+calcEnergized := \entry -> (
+  energized := false .* width .* height;
+  traveled := {};
+  tq = [entry];
+
+  while (tq != []) (
+    [dir, pos] := pop tq;
+    if ([dir, pos] in traveled) continue;
+    traveled[[dir, pos]] = null;
+    energized[pos[0]][pos[1]] = true;
+    travel(dir, pos);
+  );
+  energized map sum then sum
+);
+
+# energized map (_ map (".#" !!) join "" then print);
+print("1:", calcEnergized(["E", V(0, 0)]));
+
+beams := [];
+for (i <- 0 til width) (
+  beams append= ["S", V(0, i)];
+  beams append= ["N", V(height - 1, i)];
+);
+for (j <- 0 til height) (
+  beams append= ["E", V(j, 0)];
+  beams append= ["W", V(j, width - 1)];
+);
+
+print("2:", beams map calcEnergized then max);
