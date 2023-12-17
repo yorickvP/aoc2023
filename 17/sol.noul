@@ -1,0 +1,62 @@
+import "prelude.noul";
+
+puzzle_input := read() . lines filter len map (map int);
+
+height := len(puzzle_input);
+width := len(puzzle_input[0]);
+isInBounds := \[i, j] -> i >= 0 and j >= 0 and i < height and j < width;
+
+ix := \a, x -> a[x[0]][x[1]];
+
+connFour := [V(1, 0), V(0, 1), V(0, -1), V(-1, 0)];
+opposite := \x -> 3 - x;
+# dir := "DRLU";
+
+neighbours := \budget, pos, dir -> (
+  r := [];
+  for (i, delta <<- connFour) (
+    if (i == dir.opposite) continue;
+    if (budget == 0 and i == dir) continue;
+    d := pos + delta;
+    if (not(d.isInBounds)) continue;
+    r append= [(if (i == dir) budget - 1 else 2), d, i];
+  );
+  r
+);
+
+dijkstra := \source -> (
+  dist := {};
+  prev := {};
+  q := {};
+  for (i <- 0 til height; j <- 0 til width; b <- 0 til 3; d <- 0 til 4) (
+    v := V(i, j);
+    dist[[b, v, d]] = 1/0;
+    prev[[b, v, d]] = null;
+  );
+  for (b <- 0 til 3; d <- 0 til 4) dist[[b, V(0, 0), d]] = 0;
+  q[[2, V(0, 0), 1]] = null;
+  visited := {};
+  i := 0;
+  while (q != {}) (
+    u := q min (<=> on (\x -> dist[x]));
+    remove q[u];
+    visited[u] = null;
+    for (v <- neighbours(u[0], u[1], u[2])) (
+      if (v in visited) continue;
+      # print(v);
+      dist[v] min= dist[u] + (puzzle_input ix v[1]);
+      q[v] = null;
+    );
+    i += 1;
+    if (i % 1000 == 0) (
+      print(i, width * height * 3 * 4, q.len);
+    )
+  );
+  # print(dist, prev);
+  s := [];
+  u := V(height - 1, width - 1);
+  dists := dist.items filter ((== u) on second on first);
+  dists map print;
+);
+
+print(dijkstra(V(0, 0)));
