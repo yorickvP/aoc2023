@@ -1,0 +1,21 @@
+import "prelude.noul";
+
+puzzle_input := read() . lines filter len map (split " ");
+
+vecs := {"R": V(0, 1), "U": V(-1, 0), "L": V(0, -1), "D": V(1, 0)};
+
+shoelace := \points ->
+  (points window 2 sum (\[[c, a], [d, b]] -> (a * d) - (b * c))) / 2;
+
+toDelta := \[dir, cnt, _] -> vecs[dir] * cnt.int;
+corners1 := puzzle_input map toDelta scan (+);
+boundary1 := (puzzle_input sum (int on second)) / 2 + 1;
+
+print("1:", boundary1 + corners1.shoelace);
+
+toDist2 := \[_, _, col] -> col[2:-2] int_radix 16;
+toDelta2 := \[_, _, col] -> vecs["RDLU"[col[-2].int]] * (col[2:-2] int_radix 16);
+corners2 := puzzle_input map toDelta2 scan (+);
+boundary2 := (puzzle_input sum toDist2) / 2 + 1;
+
+print("2:", boundary2 + corners2.shoelace);
