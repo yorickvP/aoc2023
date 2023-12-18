@@ -1,4 +1,5 @@
 import "prelude.noul";
+import "heap.noul";
 
 puzzle_input := read() . lines filter len map (map int);
 
@@ -12,51 +13,61 @@ connFour := [V(1, 0), V(0, 1), V(0, -1), V(-1, 0)];
 opposite := \x -> 3 - x;
 # dir := "DRLU";
 
-neighbours := \budget, pos, dir -> (
+secondNeighbours := \budget, pos, dir -> (
   r := [];
   for (i, delta <<- connFour) (
     if (i == dir.opposite) continue;
     if (budget == 0 and i == dir) continue;
     d := pos + delta;
     if (not(d.isInBounds)) continue;
-    r append= [(if (i == dir) budget - 1 else 2), d, i];
+    c := puzzle_input ix d;
+    if (i == dir) (
+      r append= [[budget - 1, d, i], c];
+    ) else (
+      if ((d + 3 * delta).isInBounds.not) continue;
+      d += delta; c += puzzle_input ix d;
+      d += delta; c += puzzle_input ix d;
+      d += delta; c += puzzle_input ix d;
+      r append= [[6, d, i], c];
+    )
   );
   r
 );
 
-dijkstra := \source -> (
+dijkstra := \vertices, neighbours, isStart, sources -> (
   dist := {};
-  prev := {};
-  q := {};
-  for (i <- 0 til height; j <- 0 til width; b <- 0 til 3; d <- 0 til 4) (
-    v := V(i, j);
-    dist[[b, v, d]] = 1/0;
-    prev[[b, v, d]] = null;
-  );
-  for (b <- 0 til 3; d <- 0 til 4) dist[[b, V(0, 0), d]] = 0;
-  q[[2, V(0, 0), 1]] = null;
+  q := [];
   visited := {};
+  for (v <- vertices) (
+    dist[v] = 1/0;
+    if (v.isStart) dist[v] = 0;
+  );
+  for (source <- sources)
+    q heappush= [0, source];
   i := 0;
-  while (q != {}) (
-    u := q min (<=> on (\x -> dist[x]));
-    remove q[u];
+  u := null;
+  while (q != []) (
+    [q, [_, u]] = heappop(consume q);
     visited[u] = null;
-    for (v <- neighbours(u[0], u[1], u[2])) (
+    for ([v, cost] <- neighbours(u[0], u[1], u[2])) (
       if (v in visited) continue;
-      # print(v);
-      dist[v] min= dist[u] + (puzzle_input ix v[1]);
-      q[v] = null;
+      if (dist[u] + cost < dist[v]) (
+        dist[v] = dist[u] + cost;
+        q heappush= [dist[v], v];
+      );
     );
     i += 1;
     if (i % 1000 == 0) (
-      print(i, width * height * 3 * 4, q.len);
+      print("progress:", i, "/", vertices.len, "q:", q.len);
     )
   );
-  # print(dist, prev);
   s := [];
-  u := V(height - 1, width - 1);
+  u = V(height - 1, width - 1);
   dists := dist.items filter ((== u) on second on first);
-  dists map print;
+  dists min (<=> on second)
 );
 
-print(dijkstra(V(0, 0)));
+firstIsStart := \[b, d, v] -> d == V(0, 0);
+vertices := for (i <- 0 til height; j <- 0 til width; b <- 0 til 7; d <- 0 til 4) yield [b, V(i, j), d];
+
+print(dijkstra(vertices, secondNeighbours, firstIsStart, [[0, V(0, 0), 0], [0, V(0, 0), 1]]));

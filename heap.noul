@@ -1,0 +1,40 @@
+
+heapparent := \i -> (i - 1) // 2;
+heapleft := \i -> (2 * i) + 1;
+heapright := \i -> (2 * i) + 2;
+
+heappush := \h, [k, v] -> (
+  index := h.len;
+  h append= [k, v];
+  while (index != 0) (
+    p := index.heapparent;
+    if (h[p][0] > h[index][0])
+      swap h[p], h[index];
+    index = p;
+  );
+  h
+);
+
+max_heapify := \h, i -> (
+  l, r := i.heapleft, i.heapright;
+  length := h.len;
+  largest := i;
+  if (l < length and h[l][0] < h[i][0])
+    largest = l;
+  if (r < length and h[r][0] < h[largest][0])
+    largest = r;
+  if (largest != i) (
+    swap h[largest], h[i];
+    return max_heapify(consume h, largest);
+  );
+  return h;
+);
+
+heappop := \h -> (
+  r := h[0];
+  swap h[0], h[-1];
+  pop h;
+  h max_heapify= 0;
+  [h, r]
+);
+
