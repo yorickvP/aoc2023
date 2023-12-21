@@ -1,0 +1,66 @@
+import "prelude.noul";
+
+[instructions, parts] := read() split "\n\n" map lines filter len;
+
+instr := for ([k, v] <- instructions map (split "{"))
+  yield k: v[:-1] split ",";
+
+parts map= \p -> (
+  for ([x, y] <- p[1:-1] split "," map (split "=")) yield x: (int y)
+);
+
+runPart := \p -> (
+  state := "in";
+  [x, m, a, s] := "xmas" map (p !!);
+  while (state not_in "RA") (
+    set := false;
+    for ([cond, newst] <- instr[state][:-1] map (split ":"); if eval(cond)) (
+      state = newst;
+      set = true;
+      break;
+    );
+    if (set.not) state = instr[state][-1];
+  );
+  state == "A"
+);
+print("part 1:", parts filter runPart sum (_.values.sum));
+
+negate := \x -> (
+  v, c, n := x[0], x[1], x[2:].int;
+  switch (c)
+  case "<" -> (c = ">"; n -= 1)
+  case ">" -> (c = "<"; n += 1);
+  v $ c $ n.str
+);
+
+calc_paths := \ -> (
+  s := [[[], "in"]];
+  destinations := [];
+  while (s != []) (
+    [i, v] := pop s;
+    if (v not_in "RA") (
+      for ([cond, newst] <- instr[v][:-1] map (split ":")) (
+        s append= [i +. cond, newst];
+        i append= cond.negate;
+      );
+      s append= [i, instr[v][-1]];
+    ) else (
+      destinations append= [i, v];
+    );
+  );
+  destinations filter ((== "A") on second) map first
+);
+
+struct Boundary (low_bound, high_bound);
+parse_path := \path -> (
+  def := Boundary(0, 4001);
+  b := {"x": def, "m": def, "a": def, "s": def};
+  for (p <- path) (
+    v, c, n := p[0], p[1], p[2:].int;
+    switch (c)
+    case "<" -> (b[v][high_bound] min= n)
+    case ">" -> (b[v][low_bound] max= n);
+  );
+  b.values product (\x -> x.high_bound -  x.low_bound - 1)
+);
+print("part  2:", calc_paths() sum parse_path)
