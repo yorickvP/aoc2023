@@ -1,0 +1,67 @@
+import "prelude.noul";
+
+struct Module (modType, modDest, modState);
+
+modules := read() . lines filter len map (\x -> (
+  [nm, dst] := x split " -> ";
+  tp := "";
+  if (nm[0] in "%&") [tp, nm] = uncons nm;
+  st := switch (tp) case "" -> null case "%" -> false case "&" -> {};
+  [nm, Module(tp, dst split ", ", st)]
+)) then dict;
+
+modules["button"] = Module("", ["broadcaster"], null);
+
+# add inputs, add output modules
+for ([k, v] <- modules.items; d <- v.modDest) (
+  if (d not_in modules) modules[d] = Module("", [], null);
+  if (modules[d].modType == "&")
+    modules[d][modState][k] = false;
+);
+
+pressButton := \ -> (
+  q := [["button", 0, ""]];
+  pulses := V(0, 0);
+  interestingPulses := {};
+  while (q != []) (
+    [modName, pulseType, source] := remove q[0];
+    mod := modules[modName];
+    switch (mod.modType)
+    case "" -> (null)
+    case "%" -> (
+      if (pulseType == 1) continue;
+      pulseType = mod.modState.not;
+      modules[modName][modState] = pulseType;
+    )
+    case "&" -> (
+      modules[modName][modState][source] = pulseType;
+      pulseType = modules[modName][modState].values.all.not;
+    );
+    for (d <- mod.modDest) (
+      if (d == "qt") (
+        if (modName not_in interestingPulses) interestingPulses[modName] = V(0, 0);
+        interestingPulses[modName][pulseType] += 1;
+      );
+      # print(modName, "-"$(["low", "high"][pulseType])$"->", d);
+      pulses[pulseType] += 1;
+      q append= [d, pulseType, modName];
+    );
+  );
+  [pulses, interestingPulses]
+);
+
+# print(modules);
+i := 0;
+counts := V(0, 0);
+cycles := {};
+while (cycles.len < 4) (
+  [c, p] := pressButton();
+  if (i < 1000) counts += c;
+  i += 1;
+  for ([k, v] <- p.items; if v[1] > 0; if k not_in cycles) (
+    cycles[k] = i;
+  );
+  if (i % 1000 == 0) print("progress:", c, p, i);
+);
+print("part 1:", counts.product);
+print("part 2:", cycles.values.product);
